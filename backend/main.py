@@ -8,6 +8,22 @@ from groq import Groq
 from pydantic import BaseModel
 from pypdf import PdfReader
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Configure CORS Middleware to allow OPTIONS and POST requests from Vercel
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all frontend origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows OPTIONS, POST, GET, etc.
+    allow_headers=["*"],  # Allows all headers
+)
+
+# ... rest of your endpoints (/chat, etc.) follow below ...
+
 load_dotenv()
 
 client = Groq(
