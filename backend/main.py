@@ -203,7 +203,7 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    pdf_path = Path("sandipto-offcampus (1).pdf")
+    pdf_path = Path("Subhajit Dhar cv (1).pdf")
 
     if not pdf_path.exists():
         raise HTTPException(
