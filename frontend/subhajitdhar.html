@@ -318,7 +318,7 @@
           <input 
             type="text" 
             id="backendUrlInput" 
-            value="https://hiremeai-backend-xhfw.onrender.com/" 
+            value="https://hiremeai-backend-xhfw.onrender.com" 
             class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 font-mono outline-none"
             placeholder="https://hiremeai-backend-xhfw.onrender.com/"
           />
@@ -344,7 +344,7 @@
   <!-- Application Logic -->
   <script>
     // State Variables
-    let backendBaseUrl = localStorage.getItem('backend_url') || 'https://hiremeai-backend-xhfw.onrender.com/';
+    let backendBaseUrl = (localStorage.getItem('backend_url') || 'https://hiremeai-backend-xhfw.onrender.com').replace(/\/+$/, '');
     let isMockMode = false;
 
     // Initialize Icons & UI on Load
