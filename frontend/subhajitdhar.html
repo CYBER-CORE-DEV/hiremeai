@@ -292,7 +292,7 @@
 
         <div class="flex items-center justify-between text-[11px] text-slate-500 mt-2 px-1">
           <span>Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono text-[10px]">Enter</kbd> to submit</span>
-          <span id="endpointLabel" class="font-mono text-slate-400">Target: http://localhost:8000/chat</span>
+          <span id="endpointLabel" class="font-mono text-slate-400">Target: https://hiremeai-backend-xhfw.onrender.com//chat</span>
         </div>
       </div>
 
@@ -318,9 +318,9 @@
           <input 
             type="text" 
             id="backendUrlInput" 
-            value="http://localhost:8000" 
+            value="https://hiremeai-backend-xhfw.onrender.com/" 
             class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 font-mono outline-none"
-            placeholder="http://localhost:8000"
+            placeholder="https://hiremeai-backend-xhfw.onrender.com/"
           />
           <p class="text-[11px] text-slate-400 mt-1">Make sure CORS middleware is enabled in FastAPI (`app.add_middleware(CORSMiddleware...)`).</p>
         </div>
@@ -344,7 +344,7 @@
   <!-- Application Logic -->
   <script>
     // State Variables
-    let backendBaseUrl = localStorage.getItem('backend_url') || 'http://localhost:8000';
+    let backendBaseUrl = localStorage.getItem('backend_url') || 'https://hiremeai-backend-xhfw.onrender.com/';
     let isMockMode = false;
 
     // Initialize Icons & UI on Load
