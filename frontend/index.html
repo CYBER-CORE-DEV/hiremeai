@@ -1,88 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HireMe AI</title>
+
+<title>Subhajit AI Assistant</title>
 
 <style>
-body{
-    font-family:Arial,sans-serif;
-    background:#0f172a;
-    color:white;
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter,Arial,sans-serif;
+}
+
+body{
+    height:100vh;
+    background:linear-gradient(135deg,#020617,#0f172a,#1e293b);
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
-}
-
-.container{
-    width:90%;
-    max-width:800px;
-    background:#1e293b;
-    border-radius:15px;
     padding:20px;
 }
 
-h1{
-    text-align:center;
+.container{
+    width:100%;
+    max-width:900px;
+    height:90vh;
+    background:rgba(15,23,42,.8);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
 }
 
-#chat{
-    height:450px;
+.header{
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.header h1{
+    color:white;
+    font-size:22px;
+}
+
+.status{
+    color:#10b981;
+    font-size:14px;
+}
+
+.chat{
+    flex:1;
     overflow-y:auto;
-    border:1px solid #334155;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
+    padding:20px;
+}
+
+.message{
+    display:flex;
+    margin-bottom:16px;
 }
 
 .user{
-    text-align:right;
-    margin:10px 0;
+    justify-content:flex-end;
 }
 
 .bot{
-    text-align:left;
-    margin:10px 0;
+    justify-content:flex-start;
 }
 
-.msg{
-    display:inline-block;
-    padding:10px 14px;
-    border-radius:10px;
+.bubble{
     max-width:75%;
+    padding:14px;
+    border-radius:18px;
+    line-height:1.5;
+    white-space:pre-wrap;
 }
 
-.user .msg{
+.user .bubble{
     background:#2563eb;
+    color:white;
 }
 
-.bot .msg{
-    background:#334155;
+.bot .bubble{
+    background:#1e293b;
+    color:#e2e8f0;
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.time{
+    font-size:10px;
+    margin-top:8px;
+    opacity:.7;
+}
+
+.typing{
+    padding:0 20px 10px;
+    color:#94a3b8;
+    display:none;
 }
 
 .input-area{
+    padding:20px;
+    border-top:1px solid rgba(255,255,255,.08);
     display:flex;
     gap:10px;
 }
 
 input{
     flex:1;
-    padding:12px;
-    border:none;
-    border-radius:10px;
+    background:#0f172a;
+    color:white;
+    border:1px solid #334155;
+    border-radius:14px;
+    padding:14px;
     outline:none;
+}
+
+input:focus{
+    border-color:#2563eb;
 }
 
 button{
     background:#2563eb;
     color:white;
     border:none;
-    border-radius:10px;
-    padding:12px 20px;
+    border-radius:14px;
+    padding:14px 24px;
     cursor:pointer;
+    font-weight:600;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+@media(max-width:700px){
+
+    .container{
+        height:100vh;
+        border-radius:0;
+    }
+
+    .bubble{
+        max-width:90%;
+    }
+
+    .header h1{
+        font-size:18px;
+    }
 }
 </style>
 </head>
@@ -91,49 +166,110 @@ button{
 
 <div class="container">
 
-<h1>HireMe AI Assistant</h1>
+    <div class="header">
+        <h1>🤖 HireMe AI Assistant</h1>
+        <div class="status" id="status">
+            ● Connecting...
+        </div>
+    </div>
 
-<div id="chat"></div>
+    <div class="chat" id="chat"></div>
 
-<div class="input-area">
-    <input
-        id="question"
-        placeholder="Ask a question..."
-        onkeydown="if(event.key==='Enter')sendMessage()"
-    >
-    <button onclick="sendMessage()">Send</button>
-</div>
+    <div class="typing" id="typing">
+        AI is thinking...
+    </div>
+
+    <div class="input-area">
+        <input
+            id="question"
+            placeholder="Ask about skills, projects, experience..."
+        >
+        <button id="sendBtn" onclick="sendMessage()">
+            Send
+        </button>
+    </div>
 
 </div>
 
 <script>
 
-const API_URL =
-"https://hiremeai-backend-xhfw.onrender.com/chat";
+const API_BASE =
+"https://hiremeai-backend-xhfw.onrender.com";
+
+const CHAT_API =
+`${API_BASE}/chat`;
+
+async function checkHealth(){
+
+    try{
+
+        const response = await fetch(API_BASE);
+
+        if(response.ok){
+
+            document.getElementById("status").innerHTML =
+            "● Connected";
+
+            document.getElementById("status").style.color =
+            "#10b981";
+        }
+
+    }catch{
+
+        document.getElementById("status").innerHTML =
+        "● Offline";
+
+        document.getElementById("status").style.color =
+        "#ef4444";
+    }
+}
 
 function addMessage(text,type){
 
-    const chat=document.getElementById("chat");
+    const chat =
+    document.getElementById("chat");
 
-    const wrapper=document.createElement("div");
-    wrapper.className=type;
+    const wrapper =
+    document.createElement("div");
 
-    const bubble=document.createElement("div");
-    bubble.className="msg";
-    bubble.textContent=text;
+    wrapper.className =
+    `message ${type}`;
+
+    const bubble =
+    document.createElement("div");
+
+    bubble.className =
+    "bubble";
+
+    bubble.innerHTML =
+    `${escapeHtml(text)}
+    <div class="time">
+    ${new Date().toLocaleTimeString()}
+    </div>`;
 
     wrapper.appendChild(bubble);
 
     chat.appendChild(wrapper);
 
-    chat.scrollTop=chat.scrollHeight;
+    chat.scrollTop =
+    chat.scrollHeight;
+}
+
+function escapeHtml(text){
+
+    return text
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
 }
 
 async function sendMessage(){
 
-    const input=document.getElementById("question");
+    const input =
+    document.getElementById("question");
 
-    const question=input.value.trim();
+    const question =
+    input.value.trim();
 
     if(!question) return;
 
@@ -141,35 +277,79 @@ async function sendMessage(){
 
     input.value="";
 
+    document.getElementById("typing").style.display =
+    "block";
+
+    const btn =
+    document.getElementById("sendBtn");
+
+    btn.disabled = true;
+    btn.innerText = "Thinking...";
+
     try{
 
-        const response=await fetch(API_URL,{
+        const response =
+        await fetch(CHAT_API,{
+
             method:"POST",
+
             headers:{
                 "Content-Type":"application/json"
             },
+
             body:JSON.stringify({
                 question:question
             })
         });
 
-        const data=await response.json();
+        const data =
+        await response.json();
+
+        document.getElementById("typing").style.display =
+        "none";
 
         addMessage(
-            data.answer || "No response received",
+            data.answer ||
+            "No response received.",
             "bot"
         );
 
     }catch(error){
 
+        document.getElementById("typing").style.display =
+        "none";
+
         addMessage(
-            "Backend connection failed.",
+            "Unable to connect to backend.",
             "bot"
         );
 
         console.error(error);
     }
+
+    btn.disabled = false;
+    btn.innerText = "Send";
 }
+
+document
+.getElementById("question")
+.addEventListener("keydown",e=>{
+
+    if(e.key==="Enter"){
+        sendMessage();
+    }
+});
+
+window.onload = ()=>{
+
+    checkHealth();
+
+    addMessage(
+        "Hello! I am Subhajit's AI Resume Assistant. Ask me anything about the candidate.",
+        "bot"
+    );
+};
+
 </script>
 
 </body>
