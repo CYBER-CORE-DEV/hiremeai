@@ -14,7 +14,7 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-model = "openai/gpt-oss-120b"
+model = "openai/gpt-oss-20b"
 app=FastAPI()
 
 
