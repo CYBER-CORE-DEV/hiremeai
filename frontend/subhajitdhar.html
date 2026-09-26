@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate AI Assistant - Interactive Interview</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.5);
+    }
+    
+    /* Subtle Pulse Animation */
+    @keyframes subtlePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    .pulse-subtle {
+      animation: subtlePulse 3s infinite ease-in-out;
+    }
+
+    /* Typing Dots Animation */
+    @keyframes dotFlashing {
+      0% { opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { opacity: 0.2; }
+    }
+    .dot-1 { animation: dotFlashing 1.4s infinite 0s; }
+    .dot-2 { animation: dotFlashing 1.4s infinite 0.2s; }
+    .dot-3 { animation: dotFlashing 1.4s infinite 0.4s; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-full flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- Top Navigation & Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      
+      <!-- Brand Logo / Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i data-lucide="bot" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">Candidate AI Assistant</h1>
+            <span class="px-2 py-0.5 text-xs font-mono font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">FastAPI</span>
+          </div>
+          <p class="text-xs text-slate-400">Interactive Resume & Voice Representative</p>
+        </div>
+      </div>
+
+      <!-- Action Tools (Server Status, API Settings & Dark Toggle) -->
+      <div class="flex items-center space-x-3">
+        <!-- API Connection Status -->
+        <button id="statusBadge" onclick="checkBackendHealth()" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-xs text-slate-300 transition-all" title="Click to test API connection">
+          <span id="statusIndicator" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="statusText">Checking Backend...</span>
+        </button>
+
+        <!-- Settings Button -->
+        <button onclick="toggleSettingsModal(true)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-all" title="Configure Backend URL">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col md:flex-row gap-6 overflow-hidden">
+
+    <!-- Left Column: Candidate Overview Card -->
+    <aside class="w-full md:w-80 lg:w-96 flex-shrink-0 flex flex-col gap-4">
+      
+      <!-- Candidate Profile Banner -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-semibold text-xl shadow-inner">
+              SD
+            </div>
+            <div>
+              <h2 class="font-bold text-slate-100 text-base" id="candidateName">Subhajit Dhar</h2>
+              <p class="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                <i data-lucide="briefcase" class="w-3.5 h-3.5 text-blue-400"></i> Software Engineer Candidate
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs text-slate-300 border-t border-slate-800/80 pt-3.5">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-400"></i> Resume Document</span>
+            <span class="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Subhajit Dhar cv (1).pdf</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-slate-400"></i> Resume Parser</span>
+            <span class="text-blue-400 font-medium">FastAPI + Groq LLM</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-400"></i> Hallucination Guard</span>
+            <span class="text-emerald-400 font-medium">Strict Document Only</span>
+          </div>
+        </div>
+
+        <!-- Skills Tags Preview -->
+        <div class="mt-4 pt-3 border-t border-slate-800/80">
+          <p class="text-xs font-medium text-slate-400 mb-2">Key Competencies:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">FastAPI</span>
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">Python</span>
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">Pydantic</span>
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">Groq AI</span>
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">PyPDF</span>
+            <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-800 border border-slate-700 text-slate-300">REST APIs</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Suggested Questions Widget -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex-1 flex flex-col">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400"></i> Suggested Interview Questions
+        </h3>
+        <div class="space-y-2 overflow-y-auto pr-1 flex-1 max-h-[300px] md:max-h-none">
+          <button onclick="sendQuickQuestion('Tell me about yourself and your total work experience.')" class="w-full text-left p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-xs text-slate-300 hover:text-white transition-all flex items-center justify-between group">
+            <span>"Tell me about your total experience."</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-400"></i>
+          </button>
+          
+          <button onclick="sendQuickQuestion('What technical skills and programming languages are listed on your resume?')" class="w-full text-left p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-xs text-slate-300 hover:text-white transition-all flex items-center justify-between group">
+            <span>"What are your core technical skills?"</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-400"></i>
+          </button>
+
+          <button onclick="sendQuickQuestion('What projects have you built or worked on?')" class="w-full text-left p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-xs text-slate-300 hover:text-white transition-all flex items-center justify-between group">
+            <span>"What projects have you built?"</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-400"></i>
+          </button>
+
+          <button onclick="sendQuickQuestion('Can you detail your education and certifications?')" class="w-full text-left p-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-xs text-slate-300 hover:text-white transition-all flex items-center justify-between group">
+            <span>"What is your educational background?"</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-400"></i>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Right Column: Interactive Chat Interface -->
+    <section class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex flex-col h-[600px] md:h-auto overflow-hidden relative">
+      
+      <!-- Chat Header -->
+      <div class="px-5 py-3.5 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+          <span class="text-sm font-semibold text-slate-200">HR Interview Mode</span>
+          <span class="text-xs text-slate-500 font-mono">| /chat endpoint</span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <!-- Clear Chat -->
+          <button onclick="clearChatHistory()" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all text-xs flex items-center gap-1" title="Clear Chat History">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Clear</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages Scroll Container -->
+      <div id="chatContainer" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+        
+        <!-- Welcome Assistant Message -->
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-md">
+            AI
+          </div>
+          <div class="max-w-[85%] sm:max-w-[75%] bg-slate-800/90 border border-slate-700/80 rounded-2xl rounded-tl-sm px-4 py-3 text-slate-200 text-sm shadow-md">
+            <p class="font-medium text-blue-400 text-xs mb-1">Subhajit Dhar (AI Representative)</p>
+            <p>Hello! I am an AI representative for Subhajit Dhar. I can answer questions regarding work experience, technical skills, education, and past projects based strictly on the uploaded resume.</p>
+            <p class="text-xs text-slate-400 mt-2 italic">How can I assist you with your hiring evaluation today?</p>
+            
+            <div class="mt-2.5 pt-2 border-t border-slate-700/50 flex items-center justify-between">
+              <span class="text-[10px] font-mono text-slate-500">System Ready</span>
+              <button onclick="speakText('Hello! I am an AI representative for Subhajit Dhar. How can I assist you today?')" class="text-xs text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Read aloud
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="hidden px-6 py-2 bg-slate-900">
+        <div class="flex items-center space-x-2 text-slate-400 text-xs">
+          <div class="w-6 h-6 rounded-lg bg-blue-600/30 flex items-center justify-center">
+            <i data-lucide="loader-2" class="w-3.5 h-3.5 text-blue-400 animate-spin"></i>
+          </div>
+          <span>Candidate is thinking...</span>
+          <div class="flex space-x-1">
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full dot-1"></span>
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full dot-2"></span>
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full dot-3"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="p-3 sm:p-4 bg-slate-900 border-t border-slate-800">
+        <form id="chatForm" onsubmit="handleChatSubmit(event)" class="flex gap-2">
+          <div class="relative flex-1">
+            <input 
+              type="text" 
+              id="userInput" 
+              placeholder="Ask a question about Subhajit's background..." 
+              class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all pr-10"
+              autocomplete="off"
+            />
+            <button 
+              type="button"
+              onclick="toggleMockResponseMode()" 
+              id="mockToggleBtn"
+              class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 transition-colors"
+              title="Toggle client-side mock response if backend is offline"
+            >
+              Mock: OFF
+            </button>
+          </div>
+
+          <button 
+            type="submit" 
+            id="sendBtn"
+            class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>Send</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-500 mt-2 px-1">
+          <span>Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono text-[10px]">Enter</kbd> to submit</span>
+          <span id="endpointLabel" class="font-mono text-slate-400">Target: http://localhost:8000/chat</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Settings Modal (Backend URL Config & Offline Testing) -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-blue-400"></i> API Backend Settings
+        </h3>
+        <button onclick="toggleSettingsModal(false)" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">FastAPI Backend Server URL</label>
+          <input 
+            type="text" 
+            id="backendUrlInput" 
+            value="http://localhost:8000" 
+            class="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 font-mono outline-none"
+            placeholder="http://localhost:8000"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">Make sure CORS middleware is enabled in FastAPI (`app.add_middleware(CORSMiddleware...)`).</p>
+        </div>
+
+        <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-300 font-medium">Enable Offline / Demo Mock Mode</span>
+            <input type="checkbox" id="mockModeCheckbox" onchange="syncMockMode(this.checked)" class="w-4 h-4 rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-900">
+          </div>
+          <p class="text-[11px] text-slate-400">Allows instant response testing without starting the Uvicorn server.</p>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-end space-x-2">
+          <button onclick="toggleSettingsModal(false)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition-all">Close</button>
+          <button onclick="saveSettings()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white transition-all shadow-lg shadow-blue-600/20">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    // State Variables
+    let backendBaseUrl = localStorage.getItem('backend_url') || 'http://localhost:8000';
+    let isMockMode = false;
+
+    // Initialize Icons & UI on Load
+    window.onload = function() {
+      lucide.createIcons();
+      document.getElementById('backendUrlInput').value = backendBaseUrl;
+      updateEndpointLabel();
+      checkBackendHealth();
+    };
+
+    function updateEndpointLabel() {
+      document.getElementById('endpointLabel').innerText = `Target: ${backendBaseUrl}/chat`;
+    }
+
+    // Toggle Settings Modal
+    function toggleSettingsModal(show) {
+      const modal = document.getElementById('settingsModal');
+      if (show) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+      } else {
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+      }
+    }
+
+    // Save Settings
+    function saveSettings() {
+      const urlInput = document.getElementById('backendUrlInput').value.trim();
+      backendBaseUrl = urlInput.replace(/\/$/, ""); // Remove trailing slash
+      localStorage.setItem('backend_url', backendBaseUrl);
+      updateEndpointLabel();
+      checkBackendHealth();
+      toggleSettingsModal(false);
+    }
+
+    // Synchronize Mock Mode State
+    function syncMockMode(checked) {
+      isMockMode = checked;
+      const btn = document.getElementById('mockToggleBtn');
+      if (isMockMode) {
+        btn.innerText = 'Mock: ON';
+        btn.classList.replace('bg-slate-800', 'bg-blue-600');
+        btn.classList.replace('text-slate-400', 'text-white');
+      } else {
+        btn.innerText = 'Mock: OFF';
+        btn.classList.replace('bg-blue-600', 'bg-slate-800');
+        btn.classList.replace('text-white', 'text-slate-400');
+      }
+    }
+
+    function toggleMockResponseMode() {
+      syncMockMode(!isMockMode);
+      document.getElementById('mockModeCheckbox').checked = isMockMode;
+    }
+
+    // Check Backend Server Status
+    async function checkBackendHealth() {
+      const statusIndicator = document.getElementById('statusIndicator');
+      const statusText = document.getElementById('statusText');
+      const badge = document.getElementById('statusBadge');
+      
+      badge.classList.remove('hidden');
+      statusIndicator.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+      statusText.innerText = 'Checking...';
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await fetch(`${backendBaseUrl}/`, { 
+          method: 'GET',
+          signal: controller.signal 
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-400';
+          statusText.innerText = 'Backend Connected';
+        } else {
+          throw new Error('Non-200 Response');
+        }
+      } catch (err) {
+        statusIndicator.className = 'w-2 h-2 rounded-full bg-rose-500';
+        statusText.innerText = 'Backend Offline (Use Mock)';
+      }
+    }
+
+    // Handle Chat Form Submit
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+
+      const inputEl = document.getElementById('userInput');
+      const question = inputEl.value.trim();
+
+      if (!question) return;
+
+      // Render User Message
+      appendMessage('user', question);
+      inputEl.value = '';
+
+      // Show Typing Indicator
+      showTyping(true);
+
+      if (isMockMode) {
+        // Fallback Mock Response logic
+        setTimeout(() => {
+          showTyping(false);
+          const mockAnswer = generateMockResponse(question);
+          appendMessage('assistant', mockAnswer);
+        }, 1000);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${backendBaseUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ question: question })
+        });
+
+        showTyping(false);
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        appendMessage('assistant', data.answer || "I don't have enough information to answer that.");
+
+      } catch (error) {
+        showTyping(false);
+        console.error('API Error:', error);
+        appendMessage('assistant', `⚠️ Could not reach backend server at ${backendBaseUrl}/chat.\n\nPlease check if your FastAPI server is running (` + '`uvicorn main:app --reload`' + `) and CORS middleware is added. You can also turn on "Mock Mode" on the top right to test without the server.`, true);
+      }
+    }
+
+    // Append Message to Chat Window
+    function appendMessage(role, text, isError = false) {
+      const chatContainer = document.getElementById('chatContainer');
+      const msgDiv = document.createElement('div');
+      
+      if (role === 'user') {
+        msgDiv.className = 'flex items-start justify-end space-x-3';
+        msgDiv.innerHTML = `
+          <div class="max-w-[85%] sm:max-w-[75%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm shadow-md">
+            <p>${escapeHtml(text)}</p>
+          </div>
+          <div class="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center text-slate-300 text-xs font-bold flex-shrink-0">
+            You
+          </div>
+        `;
+      } else {
+        const uniqueId = 'msg-' + Date.now();
+        msgDiv.className = 'flex items-start space-x-3';
+        msgDiv.innerHTML = `
+          <div class="w-8 h-8 rounded-xl ${isError ? 'bg-rose-600' : 'bg-blue-600'} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-md">
+            AI
+          </div>
+          <div class="max-w-[85%] sm:max-w-[75%] ${isError ? 'bg-rose-950/40 border-rose-800/80 text-rose-200' : 'bg-slate-800/90 border-slate-700/80 text-slate-200'} border rounded-2xl rounded-tl-sm px-4 py-3 text-sm shadow-md">
+            <p class="font-medium ${isError ? 'text-rose-400' : 'text-blue-400'} text-xs mb-1">Subhajit Dhar (AI Candidate)</p>
+            <p class="whitespace-pre-wrap">${escapeHtml(text)}</p>
+
+            ${!isError ? `
+              <div class="mt-2.5 pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs">
+                <span class="text-[10px] font-mono text-slate-500">Verified Answer</span>
+                <button onclick="speakText('${escapeForSpeech(text)}')" class="text-xs text-slate-400 hover:text-blue-400 flex items-center gap-1 transition-colors">
+                  <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Read aloud
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      chatContainer.appendChild(msgDiv);
+      lucide.createIcons({ props: {}, nameAttr: 'data-lucide' });
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Quick Question Helper
+    function sendQuickQuestion(questionText) {
+      document.getElementById('userInput').value = questionText;
+      handleChatSubmit();
+    }
+
+    // Toggle Typing Indicator
+    function showTyping(show) {
+      const indicator = document.getElementById('typingIndicator');
+      const sendBtn = document.getElementById('sendBtn');
+      if (show) {
+        indicator.classList.remove('hidden');
+        sendBtn.disabled = true;
+      } else {
+        indicator.classList.add('hidden');
+        sendBtn.disabled = false;
+      }
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Text To Speech synthesis
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any active speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("Text-to-speech is not supported in your browser.");
+      }
+    }
+
+    // Clear Chat Container
+    function clearChatHistory() {
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-md">
+            AI
+          </div>
+          <div class="max-w-[85%] sm:max-w-[75%] bg-slate-800/90 border border-slate-700/80 rounded-2xl rounded-tl-sm px-4 py-3 text-slate-200 text-sm shadow-md">
+            <p class="font-medium text-blue-400 text-xs mb-1">Subhajit Dhar (AI Representative)</p>
+            <p>Chat cleared! Feel free to ask any other questions about the candidate's resume.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Generate Client-Side Mock Responses
+    function generateMockResponse(q) {
+      const lower = q.toLowerCase();
+      if (lower.includes('skill') || lower.includes('technical')) {
+        return "Subhajit Dhar's core technical skills include Python, FastAPI, Pydantic, REST API development, LLM integration using Groq API, and PyPDF parsing.";
+      } else if (lower.includes('experience') || lower.includes('work') || lower.includes('year')) {
+        return "Subhajit Dhar has practical engineering experience building AI backend integrations, API microservices using FastAPI, and data parsing pipelines.";
+      } else if (lower.includes('project')) {
+        return "Key projects include an AI Candidate Assistant API that dynamically extracts structured resume data with Groq and answers HR queries without hallucination.";
+      } else {
+        return "I don't have enough information to answer that specific question based strictly on the current candidate resume.";
+      }
+    }
+
+    // Utility Helpers
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeForSpeech(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+    }
+  </script>
+</body>
+</html>
